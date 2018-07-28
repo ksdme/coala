@@ -162,6 +162,9 @@ def run_coala(console_printer=None,
 
         # Collect and run filters on sections
         section_filters = list()
+        if getattr(args, 'exec_tags', None) is not None:
+            section_filters += [('tags', args.exec_tags)]
+
         sections = apply_section_filters(section_filters,
                                          sections.values())
         sections = OrderedDict(
