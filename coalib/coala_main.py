@@ -7,6 +7,7 @@ from coalib import VERSION
 from coalib.misc.Exceptions import get_exitcode
 from coalib.output.Interactions import fail_acquire_settings
 from coalib.output.Logging import CounterHandler
+from coalib.parsing.FilterHelper import apply_section_filters
 from coalib.processes.Processing import execute_section, simplify_section_result
 from coalib.settings.ConfigurationGathering import gather_configuration
 from coalib.results.result_actions.DoNothingAction import DoNothingAction
@@ -158,6 +159,14 @@ def run_coala(console_printer=None,
             sections = OrderedDict(
                 (section_name, sections[section_name])
                 for section_name in targets)
+
+        # Collect and run filters on sections
+        section_filters = list()
+        sections = apply_section_filters(section_filters,
+                                         sections.values())
+        sections = OrderedDict(
+            (section.name.lower(), section)
+            for section in sections)
 
         for section_name, section in sections.items():
             if not section.is_enabled(targets):
