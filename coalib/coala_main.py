@@ -19,7 +19,7 @@ from coalib.results.result_actions.PrintMoreInfoAction import  \
     PrintMoreInfoAction
 from coalib.results.result_actions.PrintDebugMessageAction import \
     PrintDebugMessageAction
-from coalib.misc.Caching import FileCache
+from coalib.misc.Caching import FileCache, MultiplexedFileCache
 from coalib.misc.CachingUtilities import (
     settings_changed, update_settings_db, get_settings_hash)
 
@@ -61,7 +61,8 @@ def run_coala(console_printer=None,
               arg_parser=None,
               arg_list=None,
               args=None,
-              debug=False):
+              debug=False,
+              fileproxy_map=None):
     """
     This is a main method that should be usable for almost all purposes and
     reduces executing coala to one function call.
@@ -96,6 +97,7 @@ def run_coala(console_printer=None,
     :param debug:                   Run in debug mode, bypassing
                                     multiprocessing, and not catching any
                                     exceptions.
+    :fileproxy_map:                 A FileProxyMap object with proxies to files.
     :return:                        A dictionary containing a list of results
                                     for all analyzed sections as key.
     """
@@ -152,7 +154,16 @@ def run_coala(console_printer=None,
 
         cache = None
         if not sections['cli'].get('disable_caching', False):
-            cache = FileCache(None, os.getcwd(), flush_cache)
+            cache_args = (None, os.getcwd(), flush_cache)
+            if fileproxy_map is None:
+                cache = FileCache(*cache_args)
+            else:
+                cache = MultiplexedFileCache(*cache_args)
+                cache.set_proxymap(fileproxy_map)
+        elif fileproxy_map is not None:
+            logging.fatal('FileProxyMap is used in multiplexed mode with '
+                            'file caches, hence they cannot be used with caching '
+                            'disabled.')
 
         if targets:
             sections = OrderedDict(

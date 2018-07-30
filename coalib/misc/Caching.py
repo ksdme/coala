@@ -5,7 +5,7 @@ import os
 from coala_utils.decorators import enforce_signature
 from coalib.misc.CachingUtilities import (
     pickle_load, pickle_dump, delete_files)
-
+from coalib.misc.FileProxy import FileProxyMap
 
 class FileCache:
     """
@@ -173,3 +173,17 @@ class FileCache:
                     for file in files
                     if (file not in self.data or
                         int(os.path.getmtime(file)) > self.data[file])}
+
+
+class MultiplexedFileCache(FileCache):
+
+    def __init__(self, *args, **kargs):
+        super().__init__(*args, **kargs)
+        self.__proxymap = None
+
+    def set_proxymap(self, proxymap: FileProxyMap):
+        self.__proxymap = proxymap
+
+    @property
+    def proxymap(self):
+        return self.__proxymap

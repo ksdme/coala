@@ -291,6 +291,36 @@ def get_file_dict(filename_list, log_printer=None, allow_raw_files=False):
     return file_dict
 
 
+def get_file_dict_from_fileproxy_map(filename_list,
+                                     fileproxy_map):
+    """
+    Reads all files required into a dictionary from FileProxyMap.
+
+    :param filename_list:   List of file names to get contents of.
+    :param fileproxy_map:   FileProxyMap containing the files available.
+    :return:                Reads the contents of each file into a
+                            dictionary with filenames as keys.
+    """
+    file_dict = {}
+    for filename in filename_list:
+        proxy = fileproxy_map.resolve(filename, hard_sync=True)
+
+        if proxy is False:
+            file_dict[filename] = None
+            logging.warning('Failed to read file "{}". It seems to contain '
+                            'non-unicode characters. Leaving it out.'
+                            .format(filename))
+            continue
+        else:
+            file_contents = proxy.contents()
+            file_dict[filename] = tuple(file_contents.splitlines())
+
+    logging.debug('Files that will be checked:\n'
+                  '\n'.join(file_dict.keys()))
+
+    return file_dict
+
+
 def instantiate_bears(section,
                       local_bear_list,
                       global_bear_list,
@@ -395,8 +425,17 @@ def instantiate_processes(section,
     # This stores all matched files irrespective of whether coala is run
     # only on changed files or not. Global bears require all the files
     complete_filename_list = filename_list
-    complete_file_dict = get_file_dict(complete_filename_list,
-                                       allow_raw_files=use_raw_files)
+
+    # Check if the cache is a multiplexed version and try to use
+    # FileProxyMap if is, this allows to use in memory documents
+    # rather than files from disk.
+    if hasattr(cache, 'proxymap'):
+        complete_file_dict = get_file_dict_from_fileproxy_map(
+                                complete_filename_list,
+                                cache.proxymap)
+    else:
+        complete_file_dict = get_file_dict(complete_filename_list,
+                                           allow_raw_files=use_raw_files)
 
     if debug or debug_bears:
         from . import DebugProcessing as processing
