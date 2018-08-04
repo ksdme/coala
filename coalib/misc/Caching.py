@@ -6,6 +6,8 @@ from coala_utils.decorators import enforce_signature
 from coalib.misc.CachingUtilities import (
     pickle_load, pickle_dump, delete_files)
 
+from coalib.processes.Processing import (
+    get_file_dict, get_file_dict_from_fileproxy_map)
 
 class FileCache:
     """
@@ -173,3 +175,43 @@ class FileCache:
                     for file in files
                     if (file not in self.data or
                         int(os.path.getmtime(file)) > self.data[file])}
+
+
+class FileDictFileCache(FileCache):
+
+    def __init__(self, *args, **kargs):
+        super().__init__(*args, **kargs)
+
+    def get_file_dict(self, filename_list, allow_raw_files=False):
+        return get_file_dict(filename_list, allow_raw_files=allow_raw_files)
+
+
+class ProxyMapFileCache(FileCache):
+
+    def __init__(self, *args, **kargs):
+        super().__init__(*args, **kargs)
+        self.__proxymap = None
+
+    def set_proxymap(self, fileproxy_map):
+        self.__proxymap = fileproxy_map
+
+    def get_file_dict(self, filename_list, allow_raw_files=False):
+        return get_file_dict_from_fileproxy_map(
+            filename_list, self.__proxymap, allow_raw_files)
+
+class coalaLsFileCache(ProxyMapFileCache):
+
+    def __init__(self, *args, **kargs):
+        super().__init__(*args, **kargs)
+        self._ls_logger = None
+
+    def ls_init(self, fileproxy_map=None, ls_logger=None):
+        if fileproxy_map is not None:
+            super().set_proxymap(fileproxy_map)
+
+        if ls_logger is not None:
+            self._ls_logger = ls_logger
+
+    def track_files(self, files):
+        self._ls_logger('Tracking files: '+str(files))
+        return super().track_files(files)
