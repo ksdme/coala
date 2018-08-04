@@ -11,3 +11,5 @@ available_filters = {'language': language_filter,
                      'can_detect': can_detect_filter,
                      'can_fix': can_fix_filter,
                      }
+
+available_section_filters = {}

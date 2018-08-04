@@ -22,6 +22,8 @@ from coalib.results.result_actions.PrintDebugMessageAction import \
 from coalib.misc.Caching import FileCache
 from coalib.misc.CachingUtilities import (
     settings_changed, update_settings_db, get_settings_hash)
+from coalib.parsing.FilterHelper import (
+    apply_section_filters, collect_cli_section_filters)
 
 
 def do_nothing(*args):
@@ -158,6 +160,15 @@ def run_coala(console_printer=None,
             sections = OrderedDict(
                 (section_name, sections[section_name])
                 for section_name in targets)
+
+        # Collect all the section filters which are based on args,
+        filters = collect_cli_section_filters(args, arg_list, arg_parser)
+        if len(filters) > 0:
+            all_sections = list(sections.values())
+            filtered = apply_section_filters(filters, all_sections)
+
+            sections = OrderedDict(
+                (sect.name.lower(), sect) for sect in filtered)
 
         for section_name, section in sections.items():
             if not section.is_enabled(targets):
