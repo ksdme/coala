@@ -1,13 +1,15 @@
 import unittest
 
 from coalib import coala
-from coalib.parsing.filters import available_filters
+from coalib.parsing.filters import (
+    available_filters, available_section_filters)
 from tests.TestUtilities import (
     bear_test_module,
     execute_coala,
     TEST_BEARS_COUNT,
     C_BEARS_COUNT,
 )
+from coalib.settings.Section import Section, Setting
 
 # C bears plus 1 line holding the closing colour escape sequence.
 C_BEARS_COUNT_OUTPUT = C_BEARS_COUNT + 1
@@ -127,3 +129,28 @@ class FilterTest(unittest.TestCase):
             # All bear plus 1 line holding the closing colour escape sequence.
             self.assertEqual(len(stdout.strip().splitlines()),
                              TEST_BEARS_COUNT + 1)
+
+    def test_tag_section_filter_none(self):
+        tag_filter = available_section_filters['tag_section_filter']
+        section = Section('no_name')
+
+        flag = tag_filter(section, [('save', 'tag_two')])
+        self.assertFalse(flag)
+
+    def test_tag_section_filter(self):
+        tag_filter = available_section_filters['tag_section_filter']
+
+        section = Section('no_name')
+        section.append(Setting('tags', 'save, change'))
+
+        flag = tag_filter(section, [('save', 'tag_two')])
+        self.assertTrue(flag)
+
+    def test_tag_section_filter_cli(self):
+        tag_filter = available_section_filters['tag_section_filter']
+
+        section = Section('cli')
+        section.append(Setting('tags', 'change'))
+
+        flag = tag_filter(section, [('save',)])
+        self.assertTrue(flag)

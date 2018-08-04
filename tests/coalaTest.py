@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import unittest
 import unittest.mock
@@ -208,6 +209,38 @@ class coalaTest(unittest.TestCase):
 
     def test_show_capabilities_with_supported_language_debug(self):
         self.test_show_capabilities_with_supported_language(debug=True)
+
+    def tags_filtered_helper(self, tags=None):
+        coala_config = ('[random]',
+                        'tags = tag_one, tag_two',
+                        '[others]',
+                        'use_spaces = yeah',)
+
+        sections_regex = 'Executing section (.+)...'
+
+        with bear_test_module(), \
+                prepare_file(coala_config, None) as (_, config_filename), \
+                prepare_file(['#fixme'], None) as (_, filename):
+
+            retval, stdout, stderr = execute_coala(
+                coala.main, 'coala', '-c', config_filename,
+                '-f', filename, '-b', 'LineCountTestBear',
+                '--non-interactive', '--no-color', '--tags', *tags)
+
+            sections = re.findall(sections_regex, stdout)
+            return (retval, stdout, stderr, sections)
+
+    def test_tags_filtered(self):
+        retval, stdout, _, sections = self.tags_filtered_helper(('tag_one',))
+
+        self.assertEqual(1, retval)
+        self.assertCountEqual(sections, ('random', 'cli'))
+
+    def test_filtered_tags_execution_no_match(self):
+        retval, stdout, _, sections = self.tags_filtered_helper(('no_hit',))
+
+        self.assertEqual(1, retval)
+        self.assertCountEqual(sections, ('cli',))
 
     @unittest.mock.patch('coalib.collecting.Collectors.icollect_bears')
     def test_version_conflict_in_collecting_bears(self, import_fn):

@@ -1,6 +1,7 @@
 from coalib.parsing.InvalidFilterException import InvalidFilterException
 from coalib.parsing.filters import (
     available_filters, available_section_filters)
+from coalib.parsing.DefaultArgParser import default_arg_parser
 
 
 def is_valid_filter(filter):
@@ -147,4 +148,10 @@ def collect_cli_section_filters(args, arg_list=None, arg_parser=None):
         args = arg_parser.parse_args(arg_list)
 
     collected_filters = []
+
+    # Collect tag section filter if it is enabled
+    tags = getattr(args, 'tags', None)
+    if tags is not None:
+        collected_filters += [['tag_section_filter', tags]]
+
     return collected_filters
