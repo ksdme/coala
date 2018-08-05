@@ -177,6 +177,10 @@ To run coala without user interaction, run the `coala --non-interactive`,
         '-d', '--bear-dirs', type=PathArg, nargs='+', metavar='DIR',
         help='additional directories which may contain bears')
 
+    inputs_group.add_argument(
+        '-t', '--tags', nargs='+', metavar='TAG',
+        help='tags of sections to execute')
+
     outputs_group = arg_parser.add_argument_group('Outputs')
 
     outputs_group.add_argument(

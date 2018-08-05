@@ -198,11 +198,15 @@ class ConfigurationGatheringTest(unittest.TestCase):
                 gather_configuration(lambda *args: True,
                                      self.log_printer,
                                      arg_list=['-S', 'value=1', 'test.value=2',
-                                               '-c', escape(temporary, '\\')] +
+                                               '-c', escape(temporary, '\\'),
+                                               '--tags', 'save', ] +
                                      self.min_args))
 
         self.assertEqual(sections['cli'],
                          sections['test'].defaults)
+
+        # tags cli parameter should be omitted from cli section
+        self.assertFalse(sections['cli'].get('tags', False))
 
     def test_back_saving(self):
         filename = os.path.join(tempfile.gettempdir(),

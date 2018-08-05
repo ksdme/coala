@@ -243,6 +243,10 @@ def load_configuration(arg_list,
     targets = [item.lower() for item in list(
         cli_sections['cli'].contents.pop('targets', ''))]
 
+    # Prevent tags cli parameter from being passed down to all
+    # the other sections and from being saved to file.
+    cli_sections['cli'].contents.pop('tags', None)
+
     if bool(cli_sections['cli'].get('no_config', 'False')):
         sections = cli_sections
     else:
