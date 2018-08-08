@@ -277,4 +277,5 @@ class ProxyMapFileCacheTest(unittest.TestCase):
 
             self.assertEqual(exitcode, 0)
             self.assertEqual(len(results), 1)
+            self.assertEqual(str(file_dicts), '')
             self.assertEqual(file_dicts['cli'][filename], (memory_data,))
