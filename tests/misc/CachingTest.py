@@ -252,3 +252,29 @@ class ProxyMapFileCacheTest(unittest.TestCase):
 
         file_dict = self.cache.get_file_dict(['nofile.pycoala'])
         self.assertEqual(len(file_dict), 0)
+
+    def test_file_cache_proxy_integration(self, debug=False):
+        with bear_test_module(), \
+                prepare_file(['disk-copy\n'], None) as (_, filename):
+
+            memory_data = 'in-memory\n'
+            proxy = FileProxy(filename, None, memory_data)
+            proxymap = FileProxyMap([proxy])
+            self.cache.set_proxymap(proxymap)
+
+            results, exitcode, file_dicts = run_coala(
+                                    console_printer=ConsolePrinter(),
+                                    log_printer=LogPrinter(),
+                                    arg_list=(
+                                        '-c', os.devnull,
+                                        '-f', filename,
+                                        '-b', 'TestBear',
+                                    ),
+                                    autoapply=False,
+                                    debug=debug,
+                                    cache=self.cache
+                                )
+
+            self.assertEqual(exitcode, 0)
+            self.assertEqual(len(results), 1)
+            self.assertEqual(file_dicts['cli'][filename], (memory_data,))
